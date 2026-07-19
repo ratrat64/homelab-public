@@ -1,0 +1,4 @@
+*.env
+scripts/windows/setup/secrets/runtime/
+scripts/windows/setup/data/*.local.json
+scripts/windows/setup/configs/**/*.local.*
