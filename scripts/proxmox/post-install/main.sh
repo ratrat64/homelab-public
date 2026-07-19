@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-POST_INSTALL_URL="https://raw.githubusercontent.com/ratrat64/homelab-public/main/scripts/proxmox/post-install/post-install-args.sh"
+POST_INSTALL_URL="https://raw.githubusercontent.com/ratrat64/homelab-public/main/scripts/proxmox/setup/post-install-args.sh"
 DEFAULT_POST_INSTALL_ARGS=(
 	--fix-sources
 	--disable-enterprise
