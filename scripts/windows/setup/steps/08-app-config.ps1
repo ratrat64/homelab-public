@@ -26,7 +26,13 @@ function Copy-SetupConfigItem {
     }
 
     Ensure-ParentDirectory -Path $Destination
-    Copy-Item -LiteralPath $Source -Destination $Destination -Force
+    $content = Get-Content -LiteralPath $Source -Raw
+    $expanded = [Environment]::ExpandEnvironmentVariables($content)
+    if ($content -ceq $expanded) {
+        Copy-Item -LiteralPath $Source -Destination $Destination -Force
+    } else {
+        [System.IO.File]::WriteAllText($Destination, $expanded)
+    }
 }
 
 function Install-VsCodeExtensions {
