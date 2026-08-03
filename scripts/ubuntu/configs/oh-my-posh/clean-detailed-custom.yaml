@@ -28,9 +28,7 @@ blocks:
         foreground: "#ffffff"
         leading_diamond: 
         style: diamond
-        template: "   {{ (div ((sub
-          .PhysicalTotalMemory .PhysicalAvailableMemory)|float64) 1073741824.0)
-          }}/{{ (div .PhysicalTotalMemory 1073741824.0) }}GB |   {{ round (min 100 (mulf 12.5 .Load1)) .Precision }}% "
+        template: "   {{ round .PhysicalPercentUsed 0 }}% |   {{ round (min 100 (mulf 12.5 .Load1)) .Precision }}% "
         trailing_diamond: <transparent,#516BEB></>
         type: sysinfo
       - background: "#575656"
@@ -81,7 +79,7 @@ blocks:
         type: path
         options:
           folder_icon: " "
-          folder_separator_icon: "  "
+          folder_separator_icon: "   "
           home_icon: " "
   - alignment: left
     newline: true
