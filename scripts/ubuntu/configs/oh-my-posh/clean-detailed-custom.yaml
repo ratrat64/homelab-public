@@ -10,7 +10,7 @@ blocks:
         foreground: "#011627"
         leading_diamond: 
         style: diamond
-        template: "{{ if .WSL }}WSL at {{ end }}{{.Icon}}"
+        template: "{{ if .WSL }}WSL at {{ end }}{{.Icon}} {{.UserName}}@{{.HostName}} "
         trailing_diamond: <transparent,#FEF5ED></>
         type: os
         options:
@@ -28,6 +28,8 @@ blocks:
         foreground: "#ffffff"
         leading_diamond: 
         style: diamond
+        # TODO: look into https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/themes/if_tea.omp.json
+        # to fix ram display amount
         template: "   {{ round .PhysicalPercentUsed 0 }}% |   {{ round (min 100 (mulf 12.5 .Load1)) .Precision }}% "
         trailing_diamond: <transparent,#516BEB></>
         type: sysinfo
@@ -67,19 +69,20 @@ blocks:
         template: ╭─
         type: text
       - style: plain
-        template: " {{ .CurrentDate | date .Format }} |"
+        template: " {{ .CurrentDate | date .Format }} "
         type: time
         options:
           time_format: 15:04
+      # - style: plain
+      #   template: "  "
+      #   type: root
       - style: plain
-        template: "  "
-        type: root
-      - style: plain
-        template: " {{ .Path }} "
+        template: "{{ .Path }}"
         type: path
         options:
-          folder_icon: " "
-          folder_separator_icon: "   "
+          style: agnoster_full
+          # folder_icon: " / "
+          folder_separator_icon: "  "
           home_icon: " "
   - alignment: left
     newline: true
