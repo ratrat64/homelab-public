@@ -2,7 +2,7 @@
 # =============================================================================
 # oh-my-posh setup script — Ubuntu
 # Usage:
-#   ./setup.sh          — set up oh-my-posh
+#   ./setup.sh          — set up oh-my-posh (prompts for sudo if needed)
 #   ./setup.sh --verbose — show full apt output
 # =============================================================================
 
@@ -23,14 +23,23 @@ log()  { echo -e "${CYAN}[INFO]${NC}  $1"; }
 ok()   { echo -e "${GREEN}[DONE]${NC}  $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC}  $1"; }
 
+# Run apt-get, escalating to sudo when not root
+APT() {
+    if [[ $EUID -ne 0 ]]; then
+        sudo apt-get "$@"
+    else
+        apt-get "$@"
+    fi
+}
+
 # =============================================================================
 # STEP 1 — Apt update & required packages
 # =============================================================================
 log "Updating package index..."
 if $VERBOSE; then
-    apt-get update
+    APT update
 else
-    apt-get update -qq
+    APT update -qq
 fi
 ok "Package index updated"
 
@@ -55,9 +64,9 @@ done
 if [[ ${#MISSING[@]} -gt 0 ]]; then
     log "Installing required packages: ${MISSING[*]}"
     if $VERBOSE; then
-        apt-get install -y "${MISSING[@]}"
+        APT install -y "${MISSING[@]}"
     else
-        apt-get install -y "${MISSING[@]}" > /dev/null
+        APT install -y "${MISSING[@]}" > /dev/null
     fi
     ok "Required packages installed"
 else
