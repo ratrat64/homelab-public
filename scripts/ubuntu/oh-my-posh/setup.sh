@@ -94,6 +94,21 @@ if [[ "$SHELL" != *bash ]]; then
     warn "Default shell is not bash ($SHELL). Adding bash config anyway; switch to bash to use oh-my-posh."
 fi
 
+LOCAL_BIN='export PATH="$HOME/.local/bin:$PATH"'
+
+# Add PATH export if missing (must come before the eval line below)
+if ! grep -qF 'HOME/.local/bin' "$BASHRC" 2>/dev/null; then
+    {
+        echo ""
+        echo "# add user's private bin to PATH for non-login shells"
+        echo "$LOCAL_BIN"
+    } >> "$BASHRC"
+    ok "\$HOME/.local/bin added to PATH in $BASHRC"
+else
+    ok "\$HOME/.local/bin already on PATH in $BASHRC"
+fi
+
+# Add oh-my-posh init if missing
 if grep -q 'oh-my-posh init bash' "$BASHRC" 2>/dev/null; then
     ok "oh-my-posh already configured in $BASHRC, skipping"
 else
@@ -103,6 +118,22 @@ else
         echo "$OMP_LINE"
     } >> "$BASHRC"
     ok "oh-my-posh init added to $BASHRC"
+fi
+
+# Fix ordering: if the PATH export ended up after the eval line (e.g. from a
+# previous version of this script), move it just before the eval line so the
+# eval can actually find oh-my-posh.
+if grep -q 'oh-my-posh init bash' "$BASHRC" 2>/dev/null; then
+    EVAL_LINE=$(grep -n 'oh-my-posh init bash' "$BASHRC" | head -1 | cut -d: -f1)
+    BIN_LINE=$(grep -nF 'HOME/.local/bin' "$BASHRC" | head -1 | cut -d: -f1)
+    if [[ -n "$EVAL_LINE" && -n "$BIN_LINE" && "$BIN_LINE" -gt "$EVAL_LINE" ]]; then
+        log "PATH export is after the eval line; reordering..."
+        awk -v ins="$LOCAL_BIN" '
+            /oh-my-posh init bash/ && !done { print ins; done=1 }
+            { if ($0 == ins && !skipped) { skipped=1; next } print }
+        ' "$BASHRC" > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
+        ok "PATH export moved before oh-my-posh init"
+    fi
 fi
 
 echo ""
