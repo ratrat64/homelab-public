@@ -8,8 +8,8 @@ palettes:
       fg: "#011627"
       bg: "#FEF5ED"
     root:
-      fg: "#011627"
-      bg: "#c0392b"
+      fg: "#FEF5ED"
+      bg: "#c40707"
 blocks:
   - alignment: left
     newline: true
@@ -26,12 +26,12 @@ blocks:
           macos: ""
           ubuntu: " "
           windows: " "
-      - background: p:bg
-        foreground: p:fg
+      - background: "#FEF5ED"
+        foreground: "#011627"
         leading_diamond: 
         style: diamond
         template: "  {{ .Name }} "
-        trailing_diamond: <transparent,p:bg></>
+        trailing_diamond: <transparent,#FEF5ED></>
         type: shell
       - background: "#516BEB"
         foreground: "#ffffff"
