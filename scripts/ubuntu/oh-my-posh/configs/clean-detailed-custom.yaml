@@ -1,28 +1,37 @@
 $schema: https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json
 console_title_template: "{{ .Folder }}"
 version: 4
+palettes:
+  template: "{{ if .Root }}root{{ else }}default{{ end }}"
+  list:
+    default:
+      fg: "#011627"
+      bg: "#FEF5ED"
+    root:
+      fg: "#011627"
+      bg: "#c0392b"
 blocks:
   - alignment: left
     newline: true
     type: prompt
     segments:
-      - background: "#FEF5ED"
-        foreground: "#011627"
+      - background: p:bg
+        foreground: p:fg
         leading_diamond: ""
         style: diamond
         template: "{{ if .WSL }}WSL at {{ end }}{{.Icon}} {{.UserName}}@{{.HostName}} "
-        trailing_diamond: <transparent,#FEF5ED></>
+        trailing_diamond: <transparent,p:bg></>
         type: os
         options:
           macos: ""
           ubuntu: " "
           windows: " "
-      - background: "#FEF5ED"
-        foreground: "#011627"
+      - background: p:bg
+        foreground: p:fg
         leading_diamond: 
         style: diamond
         template: "  {{ .Name }} "
-        trailing_diamond: <transparent,#FEF5ED></>
+        trailing_diamond: <transparent,p:bg></>
         type: shell
       - background: "#516BEB"
         foreground: "#ffffff"
