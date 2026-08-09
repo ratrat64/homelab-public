@@ -30,9 +30,9 @@ blocks:
         foreground: "#011627"
         leading_diamond: 
         style: diamond
-        template: "  {{ .Name }} "
+        template: " {{ if .SSHSession }}󰱠 {{ else }} {{ end }}{{ .Shell }} "
         trailing_diamond: <transparent,#FEF5ED></>
-        type: shell
+        type: session
       - background: "#516BEB"
         foreground: "#ffffff"
         leading_diamond: 
