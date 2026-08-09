@@ -136,5 +136,74 @@ if grep -q 'oh-my-posh init bash' "$BASHRC" 2>/dev/null; then
     fi
 fi
 
+# =============================================================================
+# STEP 4 — Desktop: install Recursive Nerd Font & set terminal default
+# =============================================================================
+FONT_URL='https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.0/Recursive.zip'
+FONT_FAMILY='RecMonoCasual Nerd Font'
+FONT_WEIGHT='Bold'
+FONT_SIZE=10
+FONT_SPEC="$FONT_FAMILY $FONT_WEIGHT $FONT_SIZE"
+FONT_PATTERN='RecMonoCasualNerdFont-*.ttf'
+FONT_DIR="$HOME/.local/share/fonts"
+
+is_desktop() {
+    [[ "$(systemctl get-default 2>/dev/null)" == "graphical.target" ]] && return 0
+    compgen -G "/usr/share/xsessions/*.desktop" > /dev/null && return 0
+    dpkg -s ubuntu-desktop > /dev/null 2>&1 && return 0
+    return 1
+}
+
+if is_desktop; then
+    ok "Desktop system detected"
+    # ---- Install font if missing ---------------------------------------------
+    if fc-list | grep -qi "$FONT_FAMILY"; then
+        ok "Font '$FONT_FAMILY' already installed"
+    else
+        log "Downloading Recursive Nerd Font..."
+        TMPDIR_FONT=$(mktemp -d)
+        curl -Ls -o "$TMPDIR_FONT/recursive.zip" "$FONT_URL"
+        log "Extracting font to $FONT_DIR..."
+        mkdir -p "$FONT_DIR"
+        unzip -oq "$TMPDIR_FONT/recursive.zip" "$FONT_PATTERN" -d "$FONT_DIR"
+        rm -rf "$TMPDIR_FONT"
+        fc-cache -f > /dev/null 2>&1
+        if fc-list | grep -qi "$FONT_FAMILY"; then
+            ok "Font '$FONT_FAMILY' installed"
+        else
+            warn "Font installation could not be verified; you may need to log out/in"
+        fi
+    fi
+
+    # ---- Set as terminal default font (detect the installed one) ----
+    if command -v ptyxis > /dev/null 2>&1 || dpkg -s ptyxis > /dev/null 2>&1; then
+        log "Configuring Ptyxis to use '$FONT_FAMILY'..."
+        if gsettings set org.gnome.Ptyxis use-system-font false &&
+           gsettings set org.gnome.Ptyxis font-name "$FONT_SPEC"; then
+            ok "Ptyxis default font set to '$FONT_SPEC'"
+        else
+            warn "Could not set Ptyxis font (no D-Bus session?). Log into the desktop first and re-run."
+        fi
+    elif command -v gnome-terminal > /dev/null 2>&1 || command -v gnome-terminal.real > /dev/null 2>&1; then
+        PROFILE=$(gsettings get org.gnome.Terminal.ProfilesList default 2>/dev/null | tr -d "'")
+        if [[ -n "$PROFILE" ]]; then
+            log "Configuring GNOME Terminal to use '$FONT_FAMILY'..."
+            PROFILE_PATH="/org/gnome/terminal/legacy/profiles:/:$PROFILE/"
+            if gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH" use-system-font false &&
+               gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH" font "$FONT_SPEC"; then
+                ok "GNOME Terminal default font set to '$FONT_SPEC'"
+            else
+                warn "Could not set GNOME Terminal font (no D-Bus session?). Log into the desktop first and re-run."
+            fi
+        else
+            warn "GNOME Terminal found but no default profile configured — skipping terminal font config."
+        fi
+    else
+        warn "No Ptyxis or GNOME Terminal found — skipping terminal font config."
+    fi
+else
+    warn "Server/system without a graphical desktop detected — skipping font install and terminal config"
+fi
+
 echo ""
 ok "Setup complete! Run 'source ~/.bashrc' or restart your terminal to activate oh-my-posh."
