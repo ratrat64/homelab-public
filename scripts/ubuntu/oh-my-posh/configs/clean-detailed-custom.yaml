@@ -59,6 +59,7 @@ blocks:
         type: git
         options:
           branch_icon: "  "
+          tag_icon: " "
           fetch_status: true
           fetch_upstream_icon: true
   - alignment: left
