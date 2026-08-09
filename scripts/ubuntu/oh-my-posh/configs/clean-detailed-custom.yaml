@@ -1,6 +1,8 @@
 $schema: https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json
 console_title_template: "{{ .Folder }}"
 version: 4
+var:
+  CpuCores: 8.0
 palettes:
   template: "{{ if .Root }}root{{ else }}default{{ end }}"
   list:
@@ -39,7 +41,7 @@ blocks:
         style: diamond
         # TODO: look into https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/themes/if_tea.omp.json
         # to fix ram display amount
-        template: "   {{ round .PhysicalPercentUsed 0 }}% |   {{ round (min 100 (mulf (divf 100.0 8.0) .Load1)) .Precision }}% "
+        template: "   {{ round .PhysicalPercentUsed 0 }}% |   {{ round (min 100 (mulf (divf 100.0 .Var.CpuCores) .Load1)) .Precision }}% "
         trailing_diamond: <transparent,#516BEB></>
         type: sysinfo
       - background: "#575656"
