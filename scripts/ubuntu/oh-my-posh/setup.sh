@@ -85,56 +85,77 @@ else
 fi
 
 # =============================================================================
-# STEP 3 — Add oh-my-posh init to bashrc
+# STEP 3 — Add oh-my-posh init to bashrc (current user + root)
 # =============================================================================
-BASHRC="$HOME/.bashrc"
 OMP_LINE="eval \"\$(oh-my-posh init bash --config 'https://raw.githubusercontent.com/ratrat64/homelab-public/refs/heads/main/scripts/ubuntu/oh-my-posh/configs/clean-detailed-custom.yaml')\""
-
-if [[ "$SHELL" != *bash ]]; then
-    warn "Default shell is not bash ($SHELL). Adding bash config anyway; switch to bash to use oh-my-posh."
-fi
-
 LOCAL_BIN='export PATH="$HOME/.local/bin:$PATH"'
 
-# Add PATH export if missing (must come before the eval line below)
-if ! grep -qF 'HOME/.local/bin' "$BASHRC" 2>/dev/null; then
-    {
-        echo ""
-        echo "# add user's private bin to PATH for non-login shells"
-        echo "$LOCAL_BIN"
-    } >> "$BASHRC"
-    ok "\$HOME/.local/bin added to PATH in $BASHRC"
-else
-    ok "\$HOME/.local/bin already on PATH in $BASHRC"
-fi
+configure_bashrc() {
+    local target_user="$1"
+    local bashrc
 
-# Add oh-my-posh init if missing
-if grep -q 'oh-my-posh init bash' "$BASHRC" 2>/dev/null; then
-    ok "oh-my-posh already configured in $BASHRC, skipping"
-else
-    {
-        echo ""
-        echo "# oh my posh"
-        echo "$OMP_LINE"
-    } >> "$BASHRC"
-    ok "oh-my-posh init added to $BASHRC"
-fi
-
-# Fix ordering: if the PATH export ended up after the eval line (e.g. from a
-# previous version of this script), move it just before the eval line so the
-# eval can actually find oh-my-posh.
-if grep -q 'oh-my-posh init bash' "$BASHRC" 2>/dev/null; then
-    EVAL_LINE=$(grep -n 'oh-my-posh init bash' "$BASHRC" | head -1 | cut -d: -f1)
-    BIN_LINE=$(grep -nF 'HOME/.local/bin' "$BASHRC" | head -1 | cut -d: -f1)
-    if [[ -n "$EVAL_LINE" && -n "$BIN_LINE" && "$BIN_LINE" -gt "$EVAL_LINE" ]]; then
-        log "PATH export is after the eval line; reordering..."
-        awk -v ins="$LOCAL_BIN" '
-            /oh-my-posh init bash/ && !done { print ins; done=1 }
-            { if ($0 == ins && !skipped) { skipped=1; next } print }
-        ' "$BASHRC" > "$BASHRC.tmp" && mv "$BASHRC.tmp" "$BASHRC"
-        ok "PATH export moved before oh-my-posh init"
+    if [[ "$target_user" == "$USER" || "$target_user" == "$(whoami)" ]]; then
+        bashrc="$HOME/.bashrc"
+    else
+        bashrc="/root/.bashrc"
     fi
-fi
+
+    if [[ "$target_user" != "$(whoami)" ]]; then
+        if ! sudo test -f "$bashrc" 2>/dev/null; then
+            warn "Cannot access $bashrc — skipping oh-my-posh setup for $target_user"
+            return
+        fi
+    fi
+
+    if [[ "$target_user" == "$USER" && "$SHELL" != *bash ]]; then
+        warn "Default shell is not bash ($SHELL). Adding bash config anyway; switch to bash to use oh-my-posh."
+    fi
+
+    log "Configuring oh-my-posh for $target_user ($bashrc)"
+
+    # Add PATH export if missing (must come before the eval line below)
+    if ! grep -qF 'HOME/.local/bin' "$bashrc" 2>/dev/null; then
+        {
+            echo ""
+            echo "# add user's private bin to PATH for non-login shells"
+            echo "$LOCAL_BIN"
+        } >> "$bashrc"
+        ok "\$HOME/.local/bin added to PATH in $bashrc"
+    else
+        ok "\$HOME/.local/bin already on PATH in $bashrc"
+    fi
+
+    # Add oh-my-posh init if missing
+    if grep -q 'oh-my-posh init bash' "$bashrc" 2>/dev/null; then
+        ok "oh-my-posh already configured in $bashrc, skipping"
+    else
+        {
+            echo ""
+            echo "# oh my posh"
+            echo "$OMP_LINE"
+        } >> "$bashrc"
+        ok "oh-my-posh init added to $bashrc"
+    fi
+
+    # Fix ordering: if the PATH export ended up after the eval line (e.g. from a
+    # previous version of this script), move it just before the eval line so the
+    # eval can actually find oh-my-posh.
+    if grep -q 'oh-my-posh init bash' "$bashrc" 2>/dev/null; then
+        EVAL_LINE=$(grep -n 'oh-my-posh init bash' "$bashrc" | head -1 | cut -d: -f1)
+        BIN_LINE=$(grep -nF 'HOME/.local/bin' "$bashrc" | head -1 | cut -d: -f1)
+        if [[ -n "$EVAL_LINE" && -n "$BIN_LINE" && "$BIN_LINE" -gt "$EVAL_LINE" ]]; then
+            log "PATH export is after the eval line; reordering..."
+            awk -v ins="$LOCAL_BIN" '
+                /oh-my-posh init bash/ && !done { print ins; done=1 }
+                { if ($0 == ins && !skipped) { skipped=1; next } print }
+            ' "$bashrc" > "$bashrc.tmp" && mv "$bashrc.tmp" "$bashrc"
+            ok "PATH export moved before oh-my-posh init in $bashrc"
+        fi
+    fi
+}
+
+configure_bashrc "$USER"
+configure_bashrc "root"
 
 # =============================================================================
 # STEP 4 — Desktop: install Recursive Nerd Font & set terminal default

@@ -12,7 +12,7 @@ palettes:
     root:
       fg: "#FEF5ED"
       bg: "#c40707"
-blocks:
+blocks: 
   - alignment: left
     newline: true
     type: prompt
