@@ -11,7 +11,7 @@ palettes:
       bg: "#FEF5ED"
     root:
       fg: "#FEF5ED"
-      bg: "#c40707"
+      bg: "#970000"
 blocks: 
   - alignment: left
     newline: true
