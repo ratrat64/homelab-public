@@ -1,110 +1,109 @@
----
 $schema: https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json
-blocks:
+console_title_template: "{{ .Folder }}"
+version: 4
+var:
+  CpuCores: 8.0
+palettes:
+  template: "{{ if .Root }}root{{ else }}default{{ end }}"
+  list:
+    default:
+      fg: "#011627"
+      bg: "#FEF5ED"
+    root:
+      fg: "#FEF5ED"
+      bg: "#970000"
+blocks: 
   - alignment: left
     newline: true
+    type: prompt
     segments:
       - background: p:bg
         foreground: p:fg
-        leading_diamond: 
-        options:
-          macos: 
-          ubuntu: ' '
-          windows: ' '
+        leading_diamond: ""
         style: diamond
-        template: '{{ if .WSL }}WSL at {{ end }}{{.Icon}} {{.UserName}}@{{.HostName}} '
+        template: "{{ if .WSL }}WSL at {{ end }}{{.Icon}} {{.UserName}}@{{.HostName}} "
         trailing_diamond: <transparent,p:bg></>
         type: os
-      - background: '#FEF5ED'
-        foreground: '#011627'
+        options:
+          macos: ""
+          ubuntu: " "
+          windows: " "
+      - background: "#FEF5ED"
+        foreground: "#011627"
         leading_diamond: 
         style: diamond
-        template: ' {{ if .SSHSession }} {{ if .Root }}0 {{ end }}{{ .Shell }} '
+        template: " {{ if .SSHSession }} {{ else }} {{ end }}{{ .Shell }} "
         trailing_diamond: <transparent,#FEF5ED></>
         type: session
-      - background: '#516BEB'
-        foreground: '#ffffff'
+      - background: "#516BEB"
+        foreground: "#ffffff"
         leading_diamond: 
         style: diamond
-        template: '   {{ round .PhysicalPercentUsed 0 }}% |   {{ round (min 100 (mulf (divf 100.0 .Var.CpuCores) .Load1)) .Precision }}% '
+        template: "   {{ round .PhysicalPercentUsed 0 }}% |   {{ round (min 100 (mulf (divf 100.0 .Var.CpuCores) .Load1)) .Precision }}% "
         trailing_diamond: <transparent,#516BEB></>
         type: sysinfo
-      - background: '#575656'
-        foreground: '#d6deeb'
+      - background: "#575656"
+        foreground: "#d6deeb"
         leading_diamond: 
+        style: diamond
+        template: " {{ .FormattedMs }} "
+        trailing_diamond: 
+        type: executiontime
         options:
           style: roundrock
           threshold: 0
-        style: diamond
-        template: ' {{ .FormattedMs }} '
-        trailing_diamond: 
-        type: executiontime
-    type: prompt
   - alignment: right
+    type: prompt
     segments:
-      - background: '#17D7A0'
-        foreground: '#011627'
+      - background: "#17D7A0"
+        foreground: "#011627"
         leading_diamond: 
-        options:
-          branch_icon: '  '
-          fetch_status: true
-          fetch_upstream_icon: true
-          tag_icon: ' '
         style: diamond
-        template: {{ .UpstreamIcon }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus
-          }}{{ else }}0{{ if .Working.Changed }}  {{ .Working.String }}{{ end
+        template: "{{ .UpstreamIcon }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus
+          }}{{ end }}{{ if .Working.Changed }}  {{ .Working.String }}{{ end
           }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if
           .Staging.Changed }}  {{ .Staging.String }}{{ end }}{{ if gt
-          .StashCount 0 }}  {{ end }}0{{ end }}
+          .StashCount 0 }}  {{ .StashCount }}{{ end }}"
         trailing_diamond: 
         type: git
-    type: prompt
+        options:
+          branch_icon: "  "
+          tag_icon: " "
+          fetch_status: true
+          fetch_upstream_icon: true
   - alignment: left
     newline: true
+    type: prompt
     segments:
+      - style: plain
+        template: ╭─
+        type: text
+      - style: plain
+        template: " {{ .CurrentDate | date .Format }} "
+        type: time
+        options:
+          time_format: 15:04
       # - style: plain
       #   template: "  "
       #   type: root
       - style: plain
-        template: ╭─
-        type: text
-      - options:
-          time_format: '15:04'
-        style: plain
-        template: ' {{ .CurrentDate | date .Format }} '
-        type: time
-      - options:
-          style: agnoster_full
-        style: plain
-        template: {{ .Path }}
+        template: "{{ .Path }}"
         type: path
-    type: prompt
+        options:
+          style: agnoster_full
         #   # folder_icon: " / "
         #   folder_separator_icon: "  "
         #   home_icon: " "
   - alignment: left
     newline: true
-    segments:
-      - options:
-          always_enabled: true
-        style: plain
-        template: '╰─ '
-        type: status
     type: prompt
-console_title_template: {{ .Folder }}
-palettes:
-  list:
-    default:
-      bg: '#FEF5ED'
-      fg: '#011627'
-    root:
-      bg: '#970000'
-      fg: '#FEF5ED'
-  template: vscode-yaml-sort.helm.1rootvscode-yaml-sort.helm.2defaultvscode-yaml-sort.helm.3
+    segments:
+      - style: plain
+        template: "╰─ "
+        type: status
+        options:
+          always_enabled: true
 transient_prompt:
   background: transparent
-  foreground: '#FEF5ED'
-  template: ' '
-var:
-  CpuCores: 8
-version: 4
+  foreground: "#FEF5ED"
+  template: " "
