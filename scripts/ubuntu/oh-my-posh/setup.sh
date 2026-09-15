@@ -93,14 +93,16 @@ LOCAL_BIN='export PATH="$HOME/.local/bin:$PATH"'
 configure_bashrc() {
     local target_user="$1"
     local bashrc
+    local use_sudo=false
 
     if [[ "$target_user" == "$USER" || "$target_user" == "$(whoami)" ]]; then
         bashrc="$HOME/.bashrc"
     else
         bashrc="/root/.bashrc"
+        use_sudo=true
     fi
 
-    if [[ "$target_user" != "$(whoami)" ]]; then
+    if $use_sudo; then
         if ! sudo test -f "$bashrc" 2>/dev/null; then
             warn "Cannot access $bashrc — skipping oh-my-posh setup for $target_user"
             return
@@ -113,42 +115,62 @@ configure_bashrc() {
 
     log "Configuring oh-my-posh for $target_user ($bashrc)"
 
+    local read_cmd grep_cmd append_cmd move_cmd
+    if $use_sudo; then
+        read_cmd="sudo cat"
+        grep_cmd="sudo grep"
+        append_cmd="sudo tee -a"
+        move_cmd="sudo mv"
+    else
+        read_cmd="cat"
+        grep_cmd="grep"
+        append_cmd="tee -a"
+        move_cmd="mv"
+    fi
+
     # Add PATH export if missing (must come before the eval line below)
-    if ! grep -qF 'HOME/.local/bin' "$bashrc" 2>/dev/null; then
+    if ! $grep_cmd -qF 'HOME/.local/bin' "$bashrc" 2>/dev/null; then
         {
             echo ""
             echo "# add user's private bin to PATH for non-login shells"
             echo "$LOCAL_BIN"
-        } >> "$bashrc"
+        } | $append_cmd "$bashrc" > /dev/null
         ok "\$HOME/.local/bin added to PATH in $bashrc"
     else
         ok "\$HOME/.local/bin already on PATH in $bashrc"
     fi
 
     # Add oh-my-posh init if missing
-    if grep -q 'oh-my-posh init bash' "$bashrc" 2>/dev/null; then
+    if $grep_cmd -q 'oh-my-posh init bash' "$bashrc" 2>/dev/null; then
         ok "oh-my-posh already configured in $bashrc, skipping"
     else
         {
             echo ""
             echo "# oh my posh"
             echo "$OMP_LINE"
-        } >> "$bashrc"
+        } | $append_cmd "$bashrc" > /dev/null
         ok "oh-my-posh init added to $bashrc"
     fi
 
     # Fix ordering: if the PATH export ended up after the eval line (e.g. from a
     # previous version of this script), move it just before the eval line so the
     # eval can actually find oh-my-posh.
-    if grep -q 'oh-my-posh init bash' "$bashrc" 2>/dev/null; then
-        EVAL_LINE=$(grep -n 'oh-my-posh init bash' "$bashrc" | head -1 | cut -d: -f1)
-        BIN_LINE=$(grep -nF 'HOME/.local/bin' "$bashrc" | head -1 | cut -d: -f1)
+    if $grep_cmd -q 'oh-my-posh init bash' "$bashrc" 2>/dev/null; then
+        EVAL_LINE=$($grep_cmd -n 'oh-my-posh init bash' "$bashrc" | head -1 | cut -d: -f1)
+        BIN_LINE=$($grep_cmd -nF 'HOME/.local/bin' "$bashrc" | head -1 | cut -d: -f1)
         if [[ -n "$EVAL_LINE" && -n "$BIN_LINE" && "$BIN_LINE" -gt "$EVAL_LINE" ]]; then
             log "PATH export is after the eval line; reordering..."
-            awk -v ins="$LOCAL_BIN" '
-                /oh-my-posh init bash/ && !done { print ins; done=1 }
-                { if ($0 == ins && !skipped) { skipped=1; next } print }
-            ' "$bashrc" > "$bashrc.tmp" && mv "$bashrc.tmp" "$bashrc"
+            if $use_sudo; then
+                sudo awk -v ins="$LOCAL_BIN" '
+                    /oh-my-posh init bash/ && !done { print ins; done=1 }
+                    { if ($0 == ins && !skipped) { skipped=1; next } print }
+                ' "$bashrc" > /tmp/.bashrc.omptmp && $move_cmd /tmp/.bashrc.omptmp "$bashrc"
+            else
+                awk -v ins="$LOCAL_BIN" '
+                    /oh-my-posh init bash/ && !done { print ins; done=1 }
+                    { if ($0 == ins && !skipped) { skipped=1; next } print }
+                ' "$bashrc" > "$bashrc.tmp" && $move_cmd "$bashrc.tmp" "$bashrc"
+            fi
             ok "PATH export moved before oh-my-posh init in $bashrc"
         fi
     fi
