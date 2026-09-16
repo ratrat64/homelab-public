@@ -39,7 +39,7 @@ blocks:
         foreground: "#ffffff"
         leading_diamond: 
         style: diamond
-        template: "   {{ round .PhysicalPercentUsed 0 }}% |   {{ round (min 100 (mulf (divf 100.0 .Var.CpuCores) .Load1)) .Precision }}% "
+        template: "   {{ round .PhysicalPercentUsed 0 }}%    {{ round (min 100 (mulf (divf 100.0 .Var.CpuCores) .Load1)) .Precision }}% "
         trailing_diamond: <transparent,#516BEB></>
         type: sysinfo
       - background: "#575656"
