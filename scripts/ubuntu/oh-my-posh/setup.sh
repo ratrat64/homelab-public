@@ -84,6 +84,25 @@ else
     ok "oh-my-posh installed"
 fi
 
+# Ensure root also has oh-my-posh installed
+if [[ "$(whoami)" != "root" ]]; then
+    if ! sudo test -x /root/.local/bin/oh-my-posh 2>/dev/null; then
+        log "Installing oh-my-posh for root..."
+        sudo env HOME=/root bash -c 'curl -s https://ohmyposh.dev/install.sh | bash -s'
+        ok "oh-my-posh installed for root"
+    else
+        ok "oh-my-posh already installed for root"
+    fi
+else
+    if ! test -x /root/.local/bin/oh-my-posh 2>/dev/null; then
+        log "Installing oh-my-posh for root..."
+        env HOME=/root bash -c 'curl -s https://ohmyposh.dev/install.sh | bash -s'
+        ok "oh-my-posh installed"
+    else
+        ok "oh-my-posh already installed"
+    fi
+fi
+
 # =============================================================================
 # STEP 3 — Add oh-my-posh init to bashrc (current user + root)
 # =============================================================================
